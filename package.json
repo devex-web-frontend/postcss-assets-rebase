@@ -1,0 +1,38 @@
+{
+  "name": "postcss-img-rebase",
+  "version": "0.0.0",
+  "description": "PostCSS plugin to rebase images to specified folder.",
+  "keywords": [
+    "css",
+    "postcss",
+    "postcss-plugins",
+    "url",
+    "rebase",
+    "assets",
+    "img",
+    "image"
+  ],
+  "author": "Devexperts",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devex-web-frontend/postcss-img-rebase"
+  },
+  "files": [
+    "LICENSE",
+    "index.js"
+  ],
+  "dependencies": {
+    "postcss": "^4.1.0",
+    "mkdirp": "^0.5.0",
+    "reduce-function-call": "^1.0.1"
+  },
+  "devDependencies": {
+    "rimraf": "^2.4.0",
+    "tape": "^3.0.0",
+    "writefile": "^0.2.8"
+  },
+  "scripts": {
+    "test": "tape test"
+  }
+}

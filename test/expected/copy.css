@@ -1,0 +1,6 @@
+body {
+  clip-path: url(../imported/img.jpg);
+  clip-path: url(../imported/another-img.jpg);
+  clip-path: url(../../assets/someimage.jpg);
+  clip-path: url(http://goo.gl/VR2dL6);
+}
