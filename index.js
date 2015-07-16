@@ -10,16 +10,15 @@ module.exports = postcss.plugin('postcss-img-rebase', function(options) {
 	return function(css, postcssOptions) {
 		var to = postcssOptions.opts.to ? path.dirname(postcssOptions.opts.to) : '.';
 
-		if (!options || !options.assetsPath) {
+		if (options && options.assetsPath) {
+			css.eachDecl(function(decl) {
+				if (decl.value && decl.value.indexOf('url(') > -1) {
+					processDecl(decl, to, options);
+				}
+			})
+		} else {
 			console.warn("No assets path provided, aborting");
-			return;
 		}
-
-		css.eachDecl(function(decl) {
-			if (decl.value && decl.value.indexOf('url(') > -1) {
-				processDecl(decl, to, options);
-			}
-		})
 	}
 });
 
@@ -28,12 +27,16 @@ function processDecl(decl, to, options) {
 	var dirname = (decl.source && decl.source.input) ? path.dirname(decl.source.input.file) : process.cwd();
 
 	decl.value = reduceFunctionCall(decl.value, 'url', function(value) {
-		var url = getUrl(value);
+		var url = getUrl(value),
+			processedUrl;
 
 		if (notLocalImg(url)) {
-			return composeUrl(url);
+			processedUrl = composeUrl(url);
+		} else {
+			processedUrl = processUrlRebase(dirname, url, to, options);
 		}
-		return processUrlRebase(dirname, url, to, options);
+
+		return processedUrl;
 	});
 }
 
@@ -64,7 +67,7 @@ function copyAsset(assetPath, contents) {
 //get asset content
 function getAsset(filePath) {
 
-	if (fs.existsSync(assetPath)) {
+	if (fs.existsSync(filePath)) {
 		return fs.readFileSync(filePath);
 	} else {
 		console.warn("Can't read file '" + filePath + "', ignoring");
