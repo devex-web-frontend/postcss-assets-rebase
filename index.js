@@ -53,25 +53,23 @@ function notLocalImg(url) {
 		/^[a-z]+:\/\//.test(url)
 }
 
-//copy asset and place it tp assets folder
+//copy asset and place it to assets folder
 function copyAsset(assetPath, contents) {
 	mkdirp.sync(path.dirname(assetPath));
-	try {
-		fs.accessSync(assetPath);
-	} catch (err) {
+	if (!fs.existsSync(assetPath)) {
 		fs.writeFileSync(assetPath, contents);
 	}
 }
 
 //get asset content
 function getAsset(filePath) {
-	try {
-		var contents = fs.readFileSync(filePath);
-		return contents;
-	} catch (err) {
+
+	if (fs.existsSync(assetPath)) {
+		return fs.readFileSync(filePath);
+	} else {
 		console.warn("Can't read file '" + filePath + "', ignoring");
-		return false;
 	}
+
 }
 
 
