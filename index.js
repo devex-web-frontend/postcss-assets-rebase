@@ -30,10 +30,10 @@ function processDecl(decl, to, options) {
 		var url = getUrl(value),
 			processedUrl;
 
-		if (notLocalImg(url)) {
-			processedUrl = composeUrl(url);
-		} else {
+		if (isLocalImg(url)) {
 			processedUrl = processUrlRebase(dirname, url, to, options);
+		} else {
+			processedUrl = composeUrl(url);
 		}
 
 		return processedUrl;
@@ -49,11 +49,12 @@ function composeUrl(url) {
 }
 
 // checks if file is not local
-function notLocalImg(url) {
-	return url.indexOf('/') === 0 ||
-		url.indexOf('data:') === 0 ||
+function isLocalImg(url) {
+	var notLocal = url.indexOf('data:') === 0 ||
 		url.indexOf('#') === 0 ||
-		/^[a-z]+:\/\//.test(url)
+		/^[a-z]+:\/\//.test(url);
+
+	return !notLocal;
 }
 
 //copy asset and place it to assets folder
@@ -74,7 +75,6 @@ function getAsset(filePath) {
 	}
 
 }
-
 
 function processUrlRebase(dirname, url, to, options) {
 
