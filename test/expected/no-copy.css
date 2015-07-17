@@ -1,5 +1,5 @@
 body {
-  background: url("../../assets/img.jpg");
+  background: url('../../assets/img.jpg');
   background: url(another-assets/another-img.jpg);
   background: url("../../assets/not-existing-image.jpg");
   background: url("http://goo.gl/VR2dL6");
