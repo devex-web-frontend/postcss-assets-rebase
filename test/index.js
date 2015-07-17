@@ -1,7 +1,7 @@
 var test = require('tape');
 var path = require('path');
 var fs = require('fs');
-var url = require('..');
+var rebaser = require('..');
 var postcss = require('postcss');
 var rimraf = require('rimraf').sync;
 var writefile = require('writefile');
@@ -18,13 +18,13 @@ function clearResults(css, assetsFoler) {
 	rimraf(css || 'test/result');
 }
 
-function compareFixtures(t, testMessage, options, psOptions) {
+function compareFixtures(t, testMessage, rebaserOptions, psOptions) {
 	var fileName = path.basename(psOptions.from);
 	var filePath = psOptions.from;
 	var destPath = psOptions.to || fileName;
 	var destName = path.basename(psOptions.to);
 
-	var result = postcss(url(options))
+	var result = postcss(rebaser(rebaserOptions))
 		.process(read(filePath), psOptions)
 		.css;
 
@@ -44,43 +44,43 @@ function checkAssetsCopied(folderPath) {
 }
 
 test('no options', function(t) {
-	var opts = {};
-	var postcssOpts = {
+	var rebaserOptions = {};
+	var postcssOptions = {
 		from: 'test/fixtures/copy.css',
 		to: 'test/result/no-copy.css'
 	};
 	clearResults();
-	compareFixtures(t, 'should not change .css if asstesPath not specified', opts, postcssOpts);
+	compareFixtures(t, 'should not change .css if asstesPath not specified', rebaserOptions, postcssOptions);
 	t.end();
 
 });
 
 test('absolute', function(t) {
-	var opts = {
+	var rebaserOptions = {
 		assetsPath: 'test/imported'
 	};
-	var postcssOpts = {
+	var postcssOptions = {
 		from: 'test/fixtures/copy.css',
 		to: 'test/result/copy.css'
 	};
 	clearResults('test/result/copy.css', 'test/imported');
-	compareFixtures(t, 'should change existing assets path', opts, postcssOpts);
+	compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions);
 	t.ok(checkAssetsCopied('test/imported/'), 'should copy assets to assetsPath');
 	t.end();
 
 });
 
 test('relative', function(t) {
-	var opts = {
+	var rebaserOptions = {
 		assetsPath: 'imported',
 		relative: 'true'
 	};
-	var postcssOpts = {
+	var postcssOptions = {
 		from: 'test/fixtures/copy.css',
 		to: 'test/result/copy-relative.css'
 	};
 	clearResults('test/result/copy-relative.css', 'test/result/imported');
-	compareFixtures(t, 'should change existing assets path', opts, postcssOpts);
+	compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions);
 	t.ok(checkAssetsCopied('test/result/imported/'), 'should copy assets to assetsPath relative to source file');
 	t.end();
 
