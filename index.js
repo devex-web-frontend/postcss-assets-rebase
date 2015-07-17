@@ -4,6 +4,7 @@ var url = require('url');
 var reduceFunctionCall = require('reduce-function-call');
 var mkdirp = require('mkdirp');
 var postcss = require('postcss');
+var chalk = require('chalk');
 
 module.exports = postcss.plugin('postcss-img-rebase', function(options) {
 
@@ -17,7 +18,7 @@ module.exports = postcss.plugin('postcss-img-rebase', function(options) {
 				}
 			})
 		} else {
-			console.warn("No assets path provided, aborting");
+			console.warn(chalk.red('postcss-img-rebase: No assets path provided, aborting'));
 		}
 	}
 });
@@ -71,7 +72,7 @@ function getAsset(filePath) {
 	if (fs.existsSync(filePath)) {
 		return fs.readFileSync(filePath);
 	} else {
-		console.warn("Can't read file '" + filePath + "', ignoring");
+		console.warn(chalk.yellow('postcss-img-rebase: Can\'t read file \'' + filePath + '\', ignoring'));
 	}
 
 }
