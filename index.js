@@ -77,20 +77,15 @@ function getDuplicateIndex(assetPath) {
 	var index = 0;
 	var duplicatePath;
 	if (fs.existsSync(assetPath)) {
-
-		duplicatePath = composeDuplicatePath(assetPath, ++index);
-		console.log(chalk.magenta(index))
-		while (fs.existsSync(duplicatePath)) {
-
+		do {
 			duplicatePath = composeDuplicatePath(assetPath, ++index);
-		}
+		} while (fs.existsSync(duplicatePath))
 	}
 	return index;
 
 }
 //get asset content
 function getAsset(filePath) {
-
 	if (fs.existsSync(filePath)) {
 		return fs.readFileSync(filePath);
 	} else {
@@ -124,13 +119,13 @@ function processUrlRebase(dirname, url, to, options) {
 	absoluteAssetsPath = path.join(absoluteAssetsPath, fileName);
 	relativeAssetsPath = path.join(relativeAssetsPath, fileName);
 
-	if (options.renameDuplicates)
-	{
+	if (options.renameDuplicates) {
 		var index = getDuplicateIndex(absoluteAssetsPath);
 		if (index) {
-			absoluteAssetsPath = composeDuplicatePath(absoluteAssetsPath, index);
 			relativeAssetsPath = composeDuplicatePath(relativeAssetsPath, index);
-
+			absoluteAssetsPath = composeDuplicatePath(absoluteAssetsPath, index);
+			console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
+				relativeAssetsPath));
 		}
 	}
 	copyAsset(absoluteAssetsPath, assetContents);
