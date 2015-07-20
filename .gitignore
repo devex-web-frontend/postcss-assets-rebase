@@ -1,4 +1,5 @@
 node_modules
 test/*/imported/**
-test/result/**
+test/result
+test/imported
 .idea

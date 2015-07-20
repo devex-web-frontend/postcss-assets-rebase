@@ -35,8 +35,12 @@ function compareFixtures(t, testMessage, rebaserOptions, psOptions) {
 	t.equal(result, expected, testMessage);
 }
 
-function checkAssetsCopied(folderPath) {
+function checkAssetsCopied(folderPath, additionalPaths) {
 	var imgPaths = ['img.jpg', 'another-img.jpg'];
+	if (additionalPaths) {
+		imgPaths = imgPaths.concat(additionalPaths);
+	}
+	console.log(imgPaths)
 	return imgPaths.every(function(imgPath) {
 		return fs.existsSync(folderPath + imgPath);
 	});
@@ -82,6 +86,23 @@ test('relative', function(t) {
 	clearResults('test/result/copy-relative.css', 'test/result/imported');
 	compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions);
 	t.ok(checkAssetsCopied('test/result/imported/'), 'should copy assets to assetsPath relative to source file');
+	t.end();
+
+});
+
+test('duplicated images', function(t) {
+	var rebaserOptions = {
+		assetsPath: 'imported',
+		relative: 'true',
+		renameDuplicates: true
+	};
+	var postcssOptions = {
+		from: 'test/fixtures/copy.css',
+		to: 'test/result/copy-duplicated.css'
+	};
+	clearResults('test/result/copy-duplicated.css', 'test/result/imported');
+	compareFixtures(t, 'should rename duplicated assets', rebaserOptions, postcssOptions);
+	t.ok(checkAssetsCopied('test/result/imported/', ['img_1.jpg', 'img_2.jpg']), 'should copy assets to assetsPath relative to source file');
 	t.end();
 
 });

@@ -65,7 +65,29 @@ function copyAsset(assetPath, contents) {
 		fs.writeFileSync(assetPath, contents);
 	}
 }
+function composeDuplicatePath(assetPath, index) {
+	var extname = path.extname(assetPath);
+	var fileName = path.basename(assetPath, extname);
+	var dirname = path.dirname(assetPath);
 
+	return path.join(dirname, fileName + '_' + index + extname);
+}
+
+function getDuplicateIndex(assetPath) {
+	var index = 0;
+	var duplicatePath;
+	if (fs.existsSync(assetPath)) {
+
+		duplicatePath = composeDuplicatePath(assetPath, ++index);
+		console.log(chalk.magenta(index))
+		while (fs.existsSync(duplicatePath)) {
+
+			duplicatePath = composeDuplicatePath(assetPath, ++index);
+		}
+	}
+	return index;
+
+}
 //get asset content
 function getAsset(filePath) {
 
@@ -102,6 +124,15 @@ function processUrlRebase(dirname, url, to, options) {
 	absoluteAssetsPath = path.join(absoluteAssetsPath, fileName);
 	relativeAssetsPath = path.join(relativeAssetsPath, fileName);
 
+	if (options.renameDuplicates)
+	{
+		var index = getDuplicateIndex(absoluteAssetsPath);
+		if (index) {
+			absoluteAssetsPath = composeDuplicatePath(absoluteAssetsPath, index);
+			relativeAssetsPath = composeDuplicatePath(relativeAssetsPath, index);
+
+		}
+	}
 	copyAsset(absoluteAssetsPath, assetContents);
 
 	return composeUrl(relativeAssetsPath);
