@@ -1,4 +1,4 @@
-# postcss-img-rebase
+# postcss-assets-rebase
 
 [PostCSS](https://github.com/postcss/postcss) plugin to rebase assets used in project
 
@@ -7,7 +7,7 @@ Copies all assets used in `.css` to specified folder(not saving folder structure
 ## Installation
 
 ```console
-$ npm install postcss-img-rebase
+$ npm install postcss-assets-rebase
 ```
 
 ## Usage
@@ -16,7 +16,7 @@ $ npm install postcss-img-rebase
 // dependencies
 var fs = require("fs")
 var postcss = require("postcss")
-var rebaser = require("postcss-img-rebase")
+var rebaser = require("postcss-assets-rebase")
 
 // css to be processed
 var css = fs.readFileSync("input.css", "utf8")
