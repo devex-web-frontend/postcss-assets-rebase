@@ -1,4 +1,4 @@
-# postcss-assets-rebase
+# postcss-assets-rebase [![Build Status](https://travis-ci.org/devex-web-frontend/postcss-img-rebase.svg?branch=master)](https://travis-ci.org/devex-web-frontend/postcss-img-rebase)
 
 [PostCSS](https://github.com/postcss/postcss) plugin to rebase assets used in project
 
