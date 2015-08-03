@@ -25,7 +25,7 @@ var css = fs.readFileSync("input.css", "utf8")
 var output = postcss()
   .use(rebaser({
     assetsPath: "imported", // new path for all assets
-    relative:: true // is assetsPath relative to .css position. By default its relative to process.cwd()
+    relative: true // is assetsPath relative to .css position. By default its relative to process.cwd()
   }))
   .process(css, {
     from: "src/stylesheet/index.css"
