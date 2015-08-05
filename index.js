@@ -130,5 +130,9 @@ function processUrlRebase(dirname, url, to, options) {
 	}
 	copyAsset(absoluteAssetsPath, assetContents);
 
+	if (path.sep === '\\') {
+		relativeAssetsPath = relativeAssetsPath.replace(/\\/g, '\/');
+	}
+
 	return composeUrl(relativeAssetsPath);
 }
