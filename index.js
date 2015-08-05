@@ -152,7 +152,6 @@ function processUrlRebase(dirname, url, to, options) {
 	}
 	copyAsset(absoluteAssetsPath, assetContents);
 
-	console.log('postfix', postfix);
 	if (postfix) {
 		relativeAssetsPath += postfix;
 	}
