@@ -106,3 +106,18 @@ test('duplicated images', function(t) {
 	t.end();
 
 });
+
+test('urls with postfixes', function(t) {
+	var rebaserOptions = {
+		assetsPath: 'imported',
+		relative: 'true'
+	};
+	var postcssOptions = {
+		from: 'test/fixtures/copy-url-postfixes.css',
+		to: 'test/result/copy-url-postfixes.css'
+	};
+
+	clearResults('test/result/copy-copy-with-hashes.css', 'test/result/imported');
+	compareFixtures(t, 'should proper process urls with hashes', rebaserOptions, postcssOptions);
+	t.end();
+});

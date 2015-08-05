@@ -1,0 +1,5 @@
+body {
+	background: url(another-assets/another-img.jpg#iefix);
+	background: url(another-assets/one-more/img.jpg?some);
+	background: url(another-assets/some.jpg?#blabla);
+}
