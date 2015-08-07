@@ -1,6 +1,6 @@
 var fs = require('fs');
 var path = require('path');
-var url = require('url');
+var parseURL = require('url').parse;
 var reduceFunctionCall = require('reduce-function-call');
 var mkdirp = require('mkdirp');
 var postcss = require('postcss');
@@ -94,13 +94,35 @@ function getAsset(filePath) {
 
 }
 
+function getPostfix(url) {
+	var parsedURL = parseURL(url);
+	var postfix = '';
+
+	if (parsedURL.search) {
+		postfix += parsedURL.search;
+	}
+
+	if (parsedURL.hash) {
+		postfix += parsedURL.hash;
+	}
+
+	return postfix;
+}
+
+function getClearUrl(url) {
+	return parseURL(url).pathname;
+}
+
 function processUrlRebase(dirname, url, to, options) {
 
 	var relativeAssetsPath = '';
 	var absoluteAssetsPath = '.';
 
-	var filePath = path.resolve(dirname, url);
-	var fileName = path.basename(url);
+	var postfix = getPostfix(url);
+	var clearUrl = getClearUrl(url);
+
+	var filePath = path.resolve(dirname, clearUrl);
+	var fileName = path.basename(clearUrl);
 
 	var assetContents = getAsset(filePath);
 
@@ -129,6 +151,10 @@ function processUrlRebase(dirname, url, to, options) {
 		}
 	}
 	copyAsset(absoluteAssetsPath, assetContents);
+
+	if (postfix) {
+		relativeAssetsPath += postfix;
+	}
 
 	return composeUrl(relativeAssetsPath);
 }
