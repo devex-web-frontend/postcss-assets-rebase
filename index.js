@@ -45,8 +45,12 @@ function getUrl(url) {
 	return url.match(/(['"]?)(.+)\1/)[2];
 }
 
+function normalizeUrl(url) {
+	return (path.sep === '\\') ? url.replace(/\\/g, '\/') : url;
+}
+
 function composeUrl(url) {
-	return 'url(' + url + ')';
+	return 'url(' + normalizeUrl(url) + ')';
 }
 
 // checks if file is not local
