@@ -118,6 +118,6 @@ test('urls with postfixes', function(t) {
 	};
 
 	clearResults('test/result/copy-copy-with-hashes.css', 'test/result/imported');
-	compareFixtures(t, 'should proper process urls with hashes', rebaserOptions, postcssOptions);
+	compareFixtures(t, 'should proper process urls with postfixes', rebaserOptions, postcssOptions);
 	t.end();
 });
