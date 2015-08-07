@@ -90,7 +90,7 @@ test('relative', function(t) {
 
 });
 
-test('duplicated images', function(t) {
+test.only('duplicated images', function(t) {
 	var rebaserOptions = {
 		assetsPath: 'imported',
 		relative: 'true',

@@ -6,6 +6,8 @@ var mkdirp = require('mkdirp');
 var postcss = require('postcss');
 var chalk = require('chalk');
 
+var rebasedAssets = new Array();
+
 module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 
 	return function(css, postcssOptions) {
@@ -116,7 +118,17 @@ function getPostfix(url) {
 function getClearUrl(url) {
 	return parseURL(url).pathname;
 }
-
+function isRebasedAlready(filePath) {
+	for (var i = 0; i < rebasedAssets.length; i++) {
+		if (rebasedAssets[i][0] === filePath) {
+			return {
+				absolute:rebasedAssets[i][1],
+				relative: rebasedAssets[i][2]
+			};
+		}
+	}
+	return null;
+}
 function processUrlRebase(dirname, url, to, options) {
 
 	var relativeAssetsPath = '';
@@ -146,12 +158,19 @@ function processUrlRebase(dirname, url, to, options) {
 	relativeAssetsPath = path.join(relativeAssetsPath, fileName);
 
 	if (options.renameDuplicates) {
-		var index = getDuplicateIndex(absoluteAssetsPath);
-		if (index) {
-			relativeAssetsPath = composeDuplicatePath(relativeAssetsPath, index);
-			absoluteAssetsPath = composeDuplicatePath(absoluteAssetsPath, index);
-			console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
-				relativeAssetsPath));
+		if (isRebasedAlready(filePath)) {
+			absoluteAssetsPath = isRebasedAlready(filePath).absolute;
+			relativeAssetsPath = isRebasedAlready(filePath).relative;
+		} else {
+			var index = getDuplicateIndex(absoluteAssetsPath);
+			if (index) {
+				relativeAssetsPath = composeDuplicatePath(relativeAssetsPath, index);
+				absoluteAssetsPath = composeDuplicatePath(absoluteAssetsPath, index);
+				console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
+					relativeAssetsPath));
+			}
+			rebasedAssets.push([filePath, absoluteAssetsPath, relativeAssetsPath]);
+
 		}
 	}
 	copyAsset(absoluteAssetsPath, assetContents);
