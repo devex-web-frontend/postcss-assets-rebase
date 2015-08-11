@@ -31,7 +31,6 @@ function compareFixtures(t, testMessage, rebaserOptions, psOptions) {
 	var expected = read('test/expected/' + destName);
 
 	writefile(destPath, result);
-
 	t.equal(result, expected, testMessage);
 }
 
@@ -40,7 +39,6 @@ function checkAssetsCopied(folderPath, additionalPaths) {
 	if (additionalPaths) {
 		imgPaths = imgPaths.concat(additionalPaths);
 	}
-	console.log(imgPaths)
 	return imgPaths.every(function(imgPath) {
 		return fs.existsSync(folderPath + imgPath);
 	});

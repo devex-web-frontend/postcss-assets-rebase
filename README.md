@@ -70,7 +70,7 @@ Is assetsPath relative to .css position. By default its relative to process.cwd(
 Type: `Boolean`  
 Default: `False`
 
-If there are assets with different paths but same name, the would be renamed using `name_%` pattern.
+If there are assets with different paths but same name, they would be renamed using `name_%` pattern.
 
 By default only first asset would be copied.
 

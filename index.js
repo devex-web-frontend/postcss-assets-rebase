@@ -71,7 +71,8 @@ function copyAsset(assetPath, contents) {
 		fs.writeFileSync(assetPath, contents);
 	}
 }
-function composeDuplicatePath(assetPath, index) {
+
+function composeDuplicatedPath(assetPath, index) {
 	var extname = path.extname(assetPath);
 	var fileName = path.basename(assetPath, extname);
 	var dirname = path.dirname(assetPath);
@@ -79,17 +80,6 @@ function composeDuplicatePath(assetPath, index) {
 	return path.join(dirname, fileName + '_' + index + extname);
 }
 
-function getDuplicateIndex(assetPath) {
-	var index = 0;
-	var duplicatePath;
-	if (fs.existsSync(assetPath)) {
-		do {
-			duplicatePath = composeDuplicatePath(assetPath, ++index);
-		} while (fs.existsSync(duplicatePath))
-	}
-	return index;
-
-}
 //get asset content
 function getAsset(filePath) {
 	if (fs.existsSync(filePath)) {
@@ -118,16 +108,72 @@ function getPostfix(url) {
 function getClearUrl(url) {
 	return parseURL(url).pathname;
 }
-function isRebasedAlready(filePath) {
+//compare already rebased asset name with provided and get duplication index
+function compareFileNames(rebasedPath, filePath) {
+	var rebasedExtName = path.extname(rebasedPath);
+	var fileExtName = path.extname(filePath);
+	var rebasedBaseName = path.basename(rebasedPath, rebasedExtName);
+	var fileBaseName = path.basename(filePath, fileExtName);
+
+	var reg = new RegExp('^' + fileBaseName + '_(\\d+)$');
+	var executed = reg.exec(rebasedBaseName);
+	var index;
+
+	if (rebasedBaseName === fileBaseName && rebasedExtName === fileExtName) {
+		index = 1;
+	} else {
+		index = executed ? (parseFloat(executed[1]) + 1) : 0;
+	}
+
+	return index;
+}
+
+function getAlreadyRebasedPath(filePath) {
 	for (var i = 0; i < rebasedAssets.length; i++) {
-		if (rebasedAssets[i][0] === filePath) {
+		if (rebasedAssets[i].filePath === filePath) {
 			return {
-				absolute:rebasedAssets[i][1],
-				relative: rebasedAssets[i][2]
+				absolute: rebasedAssets[i].absoluteAssetsPath,
+				relative: rebasedAssets[i].relativeAssetsPath
 			};
 		}
 	}
-	return null;
+}
+
+function getDuplicationIndex(filePath) {
+	var index = 0;
+	rebasedAssets.forEach(function(rebasedAsset) {
+		var newIndex = compareFileNames(rebasedAsset.relativeAssetsPath, filePath);
+		index = (newIndex > index) ? newIndex : index;
+	});
+	return index;
+}
+
+function processAssetPaths(filePath, absoluteAssetsPath, relativeAssetsPath) {
+	var alreadyRebasedPath = getAlreadyRebasedPath(filePath);
+
+	if (!!alreadyRebasedPath) {
+		absoluteAssetsPath = alreadyRebasedPath.absolute;
+		relativeAssetsPath = alreadyRebasedPath.relative;
+	} else {
+		var duplicationIndex = getDuplicationIndex(absoluteAssetsPath);
+		if (duplicationIndex) {
+			relativeAssetsPath = composeDuplicatedPath(relativeAssetsPath, duplicationIndex);
+			absoluteAssetsPath = composeDuplicatedPath(absoluteAssetsPath, duplicationIndex);
+			console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
+				relativeAssetsPath));
+		}
+	}
+
+	rebasedAssets.push({
+		filePath: filePath,
+		absoluteAssetsPath: absoluteAssetsPath,
+		relativeAssetsPath: relativeAssetsPath
+	});
+
+	return {
+		relative: relativeAssetsPath,
+		absolute: absoluteAssetsPath
+	};
 }
 function processUrlRebase(dirname, url, to, options) {
 
@@ -158,26 +204,15 @@ function processUrlRebase(dirname, url, to, options) {
 	relativeAssetsPath = path.join(relativeAssetsPath, fileName);
 
 	if (options.renameDuplicates) {
-		if (isRebasedAlready(filePath)) {
-			absoluteAssetsPath = isRebasedAlready(filePath).absolute;
-			relativeAssetsPath = isRebasedAlready(filePath).relative;
-		} else {
-			var index = getDuplicateIndex(absoluteAssetsPath);
-			if (index) {
-				relativeAssetsPath = composeDuplicatePath(relativeAssetsPath, index);
-				absoluteAssetsPath = composeDuplicatePath(absoluteAssetsPath, index);
-				console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
-					relativeAssetsPath));
-			}
-			rebasedAssets.push([filePath, absoluteAssetsPath, relativeAssetsPath]);
-
-		}
+		var processedPaths = processAssetPaths(filePath, absoluteAssetsPath, relativeAssetsPath);
+		relativeAssetsPath = processedPaths.relative;
+		absoluteAssetsPath = processedPaths.absolute;
 	}
+
 	copyAsset(absoluteAssetsPath, assetContents);
 
 	if (postfix) {
 		relativeAssetsPath += postfix;
 	}
-
 	return composeUrl(relativeAssetsPath);
 }
