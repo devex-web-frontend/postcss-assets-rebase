@@ -18,7 +18,9 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 				}
 			})
 		} else {
-			console.warn(chalk.red('postcss-assets-rebase: No assets path provided, aborting'));
+			if (!options.silent) {
+				console.warn(chalk.red('postcss-assets-rebase: No assets path provided, aborting'));
+			}
 		}
 	}
 });
@@ -93,7 +95,9 @@ function getAsset(filePath) {
 	if (fs.existsSync(filePath)) {
 		return fs.readFileSync(filePath);
 	} else {
-		console.warn(chalk.yellow('postcss-assets-rebase: Can\'t read file \'' + filePath + '\', ignoring'));
+		if (!options.silent) {
+			console.warn(chalk.yellow('postcss-assets-rebase: Can\'t read file \'' + filePath + '\', ignoring'));
+		}
 	}
 
 }
@@ -150,8 +154,10 @@ function processUrlRebase(dirname, url, to, options) {
 		if (index) {
 			relativeAssetsPath = composeDuplicatePath(relativeAssetsPath, index);
 			absoluteAssetsPath = composeDuplicatePath(absoluteAssetsPath, index);
-			console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
-				relativeAssetsPath));
+			if (!options.silent) {
+				console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
+					relativeAssetsPath));
+			}
 		}
 	}
 	copyAsset(absoluteAssetsPath, assetContents);

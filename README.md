@@ -74,4 +74,10 @@ If there are assets with different paths but same name, the would be renamed usi
 
 By default only first asset would be copied.
 
+#### `silent` (optional)
+Type: `Boolean`
+Default: `False`
+
+Silent mode, not throwing any warnings(i.e. asset renaming, not found assets, no required options provided)
+
 ## [License](LICENSE)
