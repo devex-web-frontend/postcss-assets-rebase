@@ -132,8 +132,8 @@ function getAlreadyRebasedPath(filePath) {
 	for (var i = 0; i < rebasedAssets.length; i++) {
 		if (rebasedAssets[i].filePath === filePath) {
 			return {
-				absolute: rebasedAssets[i].absoluteAssetsPath,
-				relative: rebasedAssets[i].relativeAssetsPath
+				absolute: rebasedAssets[i].absolute,
+				relative: rebasedAssets[i].relative
 			};
 		}
 	}
@@ -142,43 +142,43 @@ function getAlreadyRebasedPath(filePath) {
 function getDuplicationIndex(filePath) {
 	var index = 0;
 	rebasedAssets.forEach(function(rebasedAsset) {
-		var newIndex = compareFileNames(rebasedAsset.relativeAssetsPath, filePath);
+		var newIndex = compareFileNames(rebasedAsset.relative, filePath);
 		index = (newIndex > index) ? newIndex : index;
 	});
 	return index;
 }
 
-function processAssetPaths(filePath, absoluteAssetsPath, relativeAssetsPath) {
+function processAssetPaths(filePath, absoluteAssetPath, relativeAssetPath) {
 	var alreadyRebasedPath = getAlreadyRebasedPath(filePath);
 
 	if (!!alreadyRebasedPath) {
-		absoluteAssetsPath = alreadyRebasedPath.absolute;
-		relativeAssetsPath = alreadyRebasedPath.relative;
+		absoluteAssetPath = alreadyRebasedPath.absolute;
+		relativeAssetPath = alreadyRebasedPath.relative;
 	} else {
-		var duplicationIndex = getDuplicationIndex(absoluteAssetsPath);
+		var duplicationIndex = getDuplicationIndex(absoluteAssetPath);
 		if (duplicationIndex) {
-			relativeAssetsPath = composeDuplicatedPath(relativeAssetsPath, duplicationIndex);
-			absoluteAssetsPath = composeDuplicatedPath(absoluteAssetsPath, duplicationIndex);
+			relativeAssetPath = composeDuplicatedPath(relativeAssetPath, duplicationIndex);
+			absoluteAssetPath = composeDuplicatedPath(absoluteAssetPath, duplicationIndex);
 			console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
-				relativeAssetsPath));
+				relativeAssetPath));
 		}
 	}
 
 	rebasedAssets.push({
 		filePath: filePath,
-		absoluteAssetsPath: absoluteAssetsPath,
-		relativeAssetsPath: relativeAssetsPath
+		absolute: absoluteAssetPath,
+		relative: relativeAssetPath
 	});
 
 	return {
-		relative: relativeAssetsPath,
-		absolute: absoluteAssetsPath
+		relative: relativeAssetPath,
+		absolute: absoluteAssetPath
 	};
 }
 function processUrlRebase(dirname, url, to, options) {
 
-	var relativeAssetsPath = '';
-	var absoluteAssetsPath = '.';
+	var relativeAssetPath = '';
+	var absoluteAssetPath = '.';
 
 	var postfix = getPostfix(url);
 	var clearUrl = getClearUrl(url);
@@ -193,26 +193,27 @@ function processUrlRebase(dirname, url, to, options) {
 	}
 
 	if (options.relative) {
-		absoluteAssetsPath = path.resolve(to, options.assetsPath);
-		relativeAssetsPath = options.assetsPath;
+		absoluteAssetPath = path.resolve(to, options.assetsPath);
+		relativeAssetPath = options.assetsPath;
 	} else {
-		absoluteAssetsPath = path.resolve(options.assetsPath);
-		relativeAssetsPath = path.relative(to, absoluteAssetsPath);
+		absoluteAssetPath = path.resolve(options.assetsPath);
+		relativeAssetPath = path.relative(to, absoluteAssetPath);
 	}
 
-	absoluteAssetsPath = path.join(absoluteAssetsPath, fileName);
-	relativeAssetsPath = path.join(relativeAssetsPath, fileName);
+	absoluteAssetPath = path.join(absoluteAssetPath, fileName);
+	relativeAssetPath = path.join(relativeAssetPath, fileName);
 
 	if (options.renameDuplicates) {
-		var processedPaths = processAssetPaths(filePath, absoluteAssetsPath, relativeAssetsPath);
-		relativeAssetsPath = processedPaths.relative;
-		absoluteAssetsPath = processedPaths.absolute;
+		var processedPaths = processAssetPaths(filePath, absoluteAssetPath, relativeAssetPath);
+		relativeAssetPath = processedPaths.relative;
+		absoluteAssetPath = processedPaths.absolute;
 	}
 
-	copyAsset(absoluteAssetsPath, assetContents);
+	copyAsset(absoluteAssetPath, assetContents);
 
 	if (postfix) {
-		relativeAssetsPath += postfix;
+		relativeAssetPath += postfix;
 	}
-	return composeUrl(relativeAssetsPath);
+
+	return composeUrl(relativeAssetPath);
 }
