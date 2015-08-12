@@ -6,11 +6,12 @@ var mkdirp = require('mkdirp');
 var postcss = require('postcss');
 var chalk = require('chalk');
 
+var silentMode;
 module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 
 	return function(css, postcssOptions) {
 		var to = postcssOptions.opts.to ? path.dirname(postcssOptions.opts.to) : '.';
-
+		silentMode = !!options.silent;
 		if (options && options.assetsPath) {
 			css.eachDecl(function(decl) {
 				if (decl.value && decl.value.indexOf('url(') > -1) {
@@ -18,7 +19,7 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 				}
 			})
 		} else {
-			if (!options.silent) {
+			if (!silentMode) {
 				console.warn(chalk.red('postcss-assets-rebase: No assets path provided, aborting'));
 			}
 		}
@@ -91,11 +92,11 @@ function getDuplicateIndex(assetPath) {
 
 }
 //get asset content
-function getAsset(filePath) {
+function getAsset(filePath, options) {
 	if (fs.existsSync(filePath)) {
 		return fs.readFileSync(filePath);
 	} else {
-		if (!options.silent) {
+		if (!silentMode) {
 			console.warn(chalk.yellow('postcss-assets-rebase: Can\'t read file \'' + filePath + '\', ignoring'));
 		}
 	}
@@ -132,7 +133,7 @@ function processUrlRebase(dirname, url, to, options) {
 	var filePath = path.resolve(dirname, clearUrl);
 	var fileName = path.basename(clearUrl);
 
-	var assetContents = getAsset(filePath);
+	var assetContents = getAsset(filePath, options);
 
 	if (!assetContents) {
 		return composeUrl(url);
@@ -154,7 +155,7 @@ function processUrlRebase(dirname, url, to, options) {
 		if (index) {
 			relativeAssetsPath = composeDuplicatePath(relativeAssetsPath, index);
 			absoluteAssetsPath = composeDuplicatePath(absoluteAssetsPath, index);
-			if (!options.silent) {
+			if (!silentMode) {
 				console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
 					relativeAssetsPath));
 			}
