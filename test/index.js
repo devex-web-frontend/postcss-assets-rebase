@@ -31,7 +31,6 @@ function compareFixtures(t, testMessage, rebaserOptions, psOptions) {
 	var expected = read('test/expected/' + destName);
 
 	writefile(destPath, result);
-
 	t.equal(result, expected, testMessage);
 }
 

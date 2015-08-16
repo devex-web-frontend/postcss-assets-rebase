@@ -5,4 +5,5 @@ body {
   background: url(another-assets/one-more/img.jpg);
   background: url("../../assets/not-existing-image.jpg");
   background: url("http://goo.gl/VR2dL6");
+  background: url(another-assets/img.jpg);
 }

@@ -6,6 +6,8 @@ var mkdirp = require('mkdirp');
 var postcss = require('postcss');
 var logger = require('./helpers/logger.js');
 
+var rebasedAssets = new Array();
+
 module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 
 	return function(css, postcssOptions) {
@@ -49,8 +51,9 @@ function normalizeUrl(url) {
 	return (path.sep === '\\') ? url.replace(/\\/g, '\/') : url;
 }
 
-function composeUrl(url) {
-	return 'url(' + normalizeUrl(url) + ')';
+function composeUrl(url, postfix) {
+	postfix = postfix || '';
+	return 'url(' + normalizeUrl(url) + postfix + ')';
 }
 
 // checks if file is not local
@@ -69,7 +72,8 @@ function copyAsset(assetPath, contents) {
 		fs.writeFileSync(assetPath, contents);
 	}
 }
-function composeDuplicatePath(assetPath, index) {
+
+function composeDuplicatedPath(assetPath, index) {
 	var extname = path.extname(assetPath);
 	var fileName = path.basename(assetPath, extname);
 	var dirname = path.dirname(assetPath);
@@ -77,25 +81,13 @@ function composeDuplicatePath(assetPath, index) {
 	return path.join(dirname, fileName + '_' + index + extname);
 }
 
-function getDuplicateIndex(assetPath) {
-	var index = 0;
-	var duplicatePath;
-	if (fs.existsSync(assetPath)) {
-		do {
-			duplicatePath = composeDuplicatePath(assetPath, ++index);
-		} while (fs.existsSync(duplicatePath))
-	}
-	return index;
-
-}
 //get asset content
-function getAsset(filePath, options) {
+function getAsset(filePath) {
 	if (fs.existsSync(filePath)) {
 		return fs.readFileSync(filePath);
 	} else {
 		logger.warn('postcss-assets-rebase: Can\'t read file \'' + filePath + '\', ignoring');
 	}
-
 }
 
 function getPostfix(url) {
@@ -116,49 +108,116 @@ function getPostfix(url) {
 function getClearUrl(url) {
 	return parseURL(url).pathname;
 }
+//compare already rebased asset name with provided and get duplication index
+function compareFileNames(rebasedPath, filePath) {
+	var rebasedExtName = path.extname(rebasedPath);
+	var fileExtName = path.extname(filePath);
+	var rebasedBaseName = path.basename(rebasedPath, rebasedExtName);
+	var fileBaseName = path.basename(filePath, fileExtName);
 
+	var reg = new RegExp('^' + fileBaseName + '_(\\d+)$');
+	var executed = reg.exec(rebasedBaseName);
+	var index;
+
+	if (rebasedBaseName === fileBaseName && rebasedExtName === fileExtName) {
+		index = 1;
+	} else {
+		index = executed ? (parseFloat(executed[1]) + 1) : 0;
+	}
+
+	return index;
+}
+
+function getAlreadyRebasedPath(filePath) {
+	for (var i = 0; i < rebasedAssets.length; i++) {
+		if (rebasedAssets[i].filePath === filePath) {
+			return {
+				absolute: rebasedAssets[i].absolute,
+				relative: rebasedAssets[i].relative
+			};
+		}
+	}
+	return null;
+}
+
+function getDuplicationIndex(filePath) {
+	var index = 0;
+	rebasedAssets.forEach(function(rebasedAsset) {
+		var newIndex = compareFileNames(rebasedAsset.relative, filePath);
+		index = (newIndex > index) ? newIndex : index;
+	});
+	return index;
+}
+
+function resolvePathDuplication(filePath, resolvedPaths) {
+	var absoluteAssetPath = resolvedPaths.absolute;
+	var relativeAssetPath = resolvedPaths.relative;
+
+	var alreadyRebasedPath = getAlreadyRebasedPath(filePath);
+
+	if (!!alreadyRebasedPath) {
+		absoluteAssetPath = alreadyRebasedPath.absolute;
+		relativeAssetPath = alreadyRebasedPath.relative;
+	} else {
+		var duplicationIndex = getDuplicationIndex(absoluteAssetPath);
+		if (duplicationIndex) {
+			relativeAssetPath = composeDuplicatedPath(relativeAssetPath, duplicationIndex);
+			absoluteAssetPath = composeDuplicatedPath(absoluteAssetPath, duplicationIndex);
+			console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
+				relativeAssetPath));
+		}
+	}
+
+	rebasedAssets.push({
+		filePath: filePath,
+		absolute: absoluteAssetPath,
+		relative: relativeAssetPath
+	});
+
+	return {
+		relative: relativeAssetPath,
+		absolute: absoluteAssetPath
+	};
+}
+
+function resolveAssetPaths(options, to, fileName) {
+
+	var relativeAssetPath = '';
+	var absoluteAssetPath = '.';
+
+	if (options.relative) {
+		absoluteAssetPath = path.resolve(to, options.assetsPath);
+		relativeAssetPath = options.assetsPath;
+	} else {
+		absoluteAssetPath = path.resolve(options.assetsPath);
+		relativeAssetPath = path.relative(to, absoluteAssetPath);
+	}
+
+	return {
+		absolute: path.join(absoluteAssetPath, fileName),
+		relative: path.join(relativeAssetPath, fileName)
+	}
+}
 function processUrlRebase(dirname, url, to, options) {
 
-	var relativeAssetsPath = '';
-	var absoluteAssetsPath = '.';
-
-	var postfix = getPostfix(url);
+	var urlPostfix = getPostfix(url);
 	var clearUrl = getClearUrl(url);
 
 	var filePath = path.resolve(dirname, clearUrl);
 	var fileName = path.basename(clearUrl);
 
-	var assetContents = getAsset(filePath, options);
+	var assetContents = getAsset(filePath);
+	var resolvedPaths = resolveAssetPaths(options, to, fileName);
 
 	if (!assetContents) {
 		return composeUrl(url);
 	}
 
-	if (options.relative) {
-		absoluteAssetsPath = path.resolve(to, options.assetsPath);
-		relativeAssetsPath = options.assetsPath;
-	} else {
-		absoluteAssetsPath = path.resolve(options.assetsPath);
-		relativeAssetsPath = path.relative(to, absoluteAssetsPath);
-	}
-
-	absoluteAssetsPath = path.join(absoluteAssetsPath, fileName);
-	relativeAssetsPath = path.join(relativeAssetsPath, fileName);
-
 	if (options.renameDuplicates) {
-		var index = getDuplicateIndex(absoluteAssetsPath);
-		if (index) {
-			relativeAssetsPath = composeDuplicatePath(relativeAssetsPath, index);
-			absoluteAssetsPath = composeDuplicatePath(absoluteAssetsPath, index);
-			logger.warn('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
-				relativeAssetsPath);
-		}
-	}
-	copyAsset(absoluteAssetsPath, assetContents);
-
-	if (postfix) {
-		relativeAssetsPath += postfix;
+		resolvedPaths = resolvePathDuplication(filePath, resolvedPaths);
 	}
 
-	return composeUrl(relativeAssetsPath);
+	copyAsset(resolvedPaths.absolute, assetContents);
+
+	return composeUrl(resolvedPaths.relative, urlPostfix);
 }

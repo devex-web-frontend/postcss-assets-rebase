@@ -5,4 +5,5 @@ body {
   background: url(imported/img.jpg);
   background: url(../../assets/not-existing-image.jpg);
   background: url(http://goo.gl/VR2dL6);
+  background: url(imported/img.jpg);
 }
