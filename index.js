@@ -4,14 +4,13 @@ var parseURL = require('url').parse;
 var reduceFunctionCall = require('reduce-function-call');
 var mkdirp = require('mkdirp');
 var postcss = require('postcss');
-var chalk = require('chalk');
+var logger = require('./helpers/logger.js');
 
-var silentMode;
 module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 
 	return function(css, postcssOptions) {
 		var to = postcssOptions.opts.to ? path.dirname(postcssOptions.opts.to) : '.';
-		silentMode = !!options.silent;
+		logger.setSilentMode(!!options.silent);
 		if (options && options.assetsPath) {
 			css.eachDecl(function(decl) {
 				if (decl.value && decl.value.indexOf('url(') > -1) {
@@ -19,9 +18,7 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 				}
 			})
 		} else {
-			if (!silentMode) {
-				console.warn(chalk.red('postcss-assets-rebase: No assets path provided, aborting'));
-			}
+			logger.error('postcss-assets-rebase: No assets path provided, aborting');
 		}
 	}
 });
@@ -96,9 +93,7 @@ function getAsset(filePath, options) {
 	if (fs.existsSync(filePath)) {
 		return fs.readFileSync(filePath);
 	} else {
-		if (!silentMode) {
-			console.warn(chalk.yellow('postcss-assets-rebase: Can\'t read file \'' + filePath + '\', ignoring'));
-		}
+		logger.warn('postcss-assets-rebase: Can\'t read file \'' + filePath + '\', ignoring');
 	}
 
 }
@@ -155,10 +150,8 @@ function processUrlRebase(dirname, url, to, options) {
 		if (index) {
 			relativeAssetsPath = composeDuplicatePath(relativeAssetsPath, index);
 			absoluteAssetsPath = composeDuplicatePath(absoluteAssetsPath, index);
-			if (!silentMode) {
-				console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
-					relativeAssetsPath));
-			}
+			logger.warn('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
+				relativeAssetsPath);
 		}
 	}
 	copyAsset(absoluteAssetsPath, assetContents);
