@@ -163,8 +163,8 @@ function resolvePathDuplication(filePath, resolvedPaths) {
 		if (duplicationIndex) {
 			relativeAssetPath = composeDuplicatedPath(relativeAssetPath, duplicationIndex);
 			absoluteAssetPath = composeDuplicatedPath(absoluteAssetPath, duplicationIndex);
-			console.warn(chalk.yellow('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
-				relativeAssetPath));
+			logger.warn('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
+				relativeAssetPath);
 		}
 	}
 
