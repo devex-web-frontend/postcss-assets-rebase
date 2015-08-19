@@ -4,7 +4,7 @@ var parseURL = require('url').parse;
 var reduceFunctionCall = require('reduce-function-call');
 var mkdirp = require('mkdirp');
 var postcss = require('postcss');
-var logger = require('./helpers/logger.js');
+var logger;
 
 var rebasedAssets = new Array();
 
@@ -12,7 +12,7 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 
 	return function(css, postcssOptions) {
 		var to = postcssOptions.opts.to ? path.dirname(postcssOptions.opts.to) : '.';
-		logger.setSilentMode(!!options.silent);
+		logger = postcssOptions;
 		if (options && options.assetsPath) {
 			css.eachDecl(function(decl) {
 				if (decl.value && decl.value.indexOf('url(') > -1) {
@@ -20,7 +20,7 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 				}
 			})
 		} else {
-			logger.error('postcss-assets-rebase: No assets path provided, aborting');
+			logger.warn('postcss-assets-rebase: No assets path provided, aborting');
 		}
 	}
 });

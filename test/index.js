@@ -5,9 +5,9 @@ var rebaser = require('..');
 var postcss = require('postcss');
 var rimraf = require('rimraf').sync;
 var writefile = require('writefile');
+var reporter = require('postcss-reporter');
 
 function read(name) {
-	console.log(name);
 	return fs.readFileSync(name, 'utf8').trim()
 }
 function clearAssets(assetsFolder) {
@@ -24,7 +24,9 @@ function compareFixtures(t, testMessage, rebaserOptions, psOptions) {
 	var destPath = psOptions.to || fileName;
 	var destName = path.basename(psOptions.to);
 
-	var result = postcss(rebaser(rebaserOptions))
+	var result = postcss()
+		.use(rebaser(rebaserOptions))
+		.use(reporter)
 		.process(read(filePath), psOptions)
 		.css;
 

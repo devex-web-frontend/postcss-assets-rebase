@@ -12,11 +12,14 @@ $ npm install postcss-assets-rebase
 
 ## Usage
 
+Plugin throws warnings when asset can't be found or duplicate is renamed.
+Warnings are thrown using `postcss.messages`. To output warnings in console can be used [postcss-reporter](https://github.com/postcss/postcss-reporter).
 ```js
 // dependencies
 var fs = require("fs")
 var postcss = require("postcss")
 var rebaser = require("postcss-assets-rebase")
+var reporter = require('postcss-reporter');
 
 // css to be processed
 var css = fs.readFileSync("input.css", "utf8")
@@ -27,6 +30,7 @@ var output = postcss()
     assetsPath: "imported", // new path for all assets
     relative: true // is assetsPath relative to .css position. By default its relative to process.cwd()
   }))
+  .use(reporter)
   .process(css, {
     from: "src/stylesheet/index.css"
     to: "dist/index.css"
@@ -73,11 +77,5 @@ Default: `False`
 If there are assets with different paths but same name, they would be renamed using `name_%` pattern.
 
 By default only first asset would be copied.
-
-#### `silent` (optional)
-Type: `Boolean`
-Default: `False`
-
-Silent mode, not throwing any warnings(i.e. asset renaming, not found assets, no required options provided)
 
 ## [License](LICENSE)
