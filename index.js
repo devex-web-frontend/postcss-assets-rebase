@@ -4,15 +4,15 @@ var parseURL = require('url').parse;
 var reduceFunctionCall = require('reduce-function-call');
 var mkdirp = require('mkdirp');
 var postcss = require('postcss');
-var logger;
+var postcssResult;
 
-var rebasedAssets = new Array();
+var rebasedAssets = [];
 
 module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 
 	return function(css, postcssOptions) {
 		var to = postcssOptions.opts.to ? path.dirname(postcssOptions.opts.to) : '.';
-		logger = postcssOptions;
+		postcssResult = postcssOptions;
 		if (options && options.assetsPath) {
 			css.eachDecl(function(decl) {
 				if (decl.value && decl.value.indexOf('url(') > -1) {
@@ -20,7 +20,7 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 				}
 			})
 		} else {
-			logger.warn('postcss-assets-rebase: No assets path provided, aborting');
+			postcssResult.warn('postcss-assets-rebase: No assets path provided, aborting');
 		}
 	}
 });
@@ -86,7 +86,7 @@ function getAsset(filePath) {
 	if (fs.existsSync(filePath)) {
 		return fs.readFileSync(filePath);
 	} else {
-		logger.warn('postcss-assets-rebase: Can\'t read file \'' + filePath + '\', ignoring');
+		postcssResult.warn('postcss-assets-rebase: Can\'t read file \'' + filePath + '\', ignoring');
 	}
 }
 
@@ -163,7 +163,7 @@ function resolvePathDuplication(filePath, resolvedPaths) {
 		if (duplicationIndex) {
 			relativeAssetPath = composeDuplicatedPath(relativeAssetPath, duplicationIndex);
 			absoluteAssetPath = composeDuplicatedPath(absoluteAssetPath, duplicationIndex);
-			logger.warn('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
+			postcssResult.warn('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
 				relativeAssetPath);
 		}
 	}
