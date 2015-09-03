@@ -5,7 +5,7 @@
   "keywords": [
     "css",
     "postcss",
-    "postcss-plugins",
+    "postcss-plugin",
     "url",
     "rebase",
     "assets",

@@ -13,7 +13,7 @@ $ npm install postcss-assets-rebase
 ## Usage
 
 Plugin throws warnings when asset can't be found or duplicate is renamed.
-Warnings are thrown using `postcss.messages`. To output warnings in console can be used [postcss-reporter](https://github.com/postcss/postcss-reporter).
+Warnings are thrown using `postcss.messages`. To output warnings in console you can use [postcss-reporter](https://github.com/postcss/postcss-reporter).
 ```js
 // dependencies
 var fs = require("fs")
@@ -27,7 +27,7 @@ var css = fs.readFileSync("input.css", "utf8")
 // process css
 var output = postcss()
   .use(rebaser({
-    assetsPath: "imported", // new path for all assets
+    assetsPath: "assets/imported", // new path for all assets
     relative: true // is assetsPath relative to .css position. By default its relative to process.cwd()
   }))
   .use(reporter)
@@ -40,18 +40,18 @@ var output = postcss()
 Source `src/stylesheet/index.css`: 
 ```css
 body {
-  background: url("../../assets/img.jpg");
+  background: url("../../assets/imported/img.jpg");
   background: url(another-assets/another-img.jpg);
-  background: url("../../assets/not-existing-image.jpg");
+  background: url("../../assets/imported/not-existing-image.jpg");
   background: url("http://goo.gl/VR2dL6");
 }
 ```
-Resulting `dist/index.css` (+`dist/imported` folder containing `img.jpg` and `another-img.jpg`):
+Resulting `dist/index.css` (+`dist/assets/imported` folder containing `img.jpg` and `another-img.jpg`):
 ```css
 body {
-  background: url(imported/img.jpg);
-  background: url(imported/another-img.jpg);
-  background: url(../../assets/not-existing-image.jpg);
+  background: url(assets/imported/img.jpg);
+  background: url(assets/imported/another-img.jpg);
+  background: url(../../assets/imported/not-existing-image.jpg);
   background: url(http://goo.gl/VR2dL6);
 }
 ```
@@ -79,3 +79,4 @@ If there are assets with different paths but same name, they would be renamed us
 By default only first asset would be copied.
 
 ## [License](LICENSE)
+## [Changelog](CHANGELOG.md)
