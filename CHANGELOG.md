@@ -1,3 +1,5 @@
+## 0.4.0
+* Provide options to save folder structure
 ## 0.3.0
 * Do not rename assets if they are used multiple times
 * use postcss.messages for logging
