@@ -26,7 +26,6 @@ function compareFixtures(t, testMessage, rebaserOptions, psOptions) {
 
 	var result = postcss()
 		.use(rebaser(rebaserOptions))
-		.use(reporter)
 		.process(read(filePath), psOptions)
 		.css;
 
@@ -74,6 +73,23 @@ test('absolute', function(t) {
 
 });
 
+test('keep structure', function(t) {
+	var rebaserOptions = {
+		assetsPath: 'test/imported',
+		keepStructure: true
+	};
+	var postcssOptions = {
+		from: 'test/fixtures/copy.css',
+		to: 'test/result/copy-keep-structure.css'
+	};
+	clearResults('test/result/copy-keep-structure.css', 'test/imported');
+	compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions);
+	t.ok(checkAssetsCopied('test/imported/test/fixtures/another-assets/', ['../../../assets/img.jpg']),
+		'should copy assets to assetsPath');
+	t.end();
+
+});
+
 test('relative', function(t) {
 	var rebaserOptions = {
 		assetsPath: 'imported',
@@ -102,7 +118,8 @@ test('duplicated images', function(t) {
 	};
 	clearResults('test/result/copy-duplicated.css', 'test/result/imported');
 	compareFixtures(t, 'should rename duplicated assets', rebaserOptions, postcssOptions);
-	t.ok(checkAssetsCopied('test/result/imported/', ['img_1.jpg', 'img_2.jpg']), 'should copy assets to assetsPath relative to source file');
+	t.ok(checkAssetsCopied('test/result/imported/', ['img_1.jpg', 'img_2.jpg']),
+		'should copy assets to assetsPath relative to source file');
 	t.end();
 
 });

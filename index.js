@@ -180,8 +180,10 @@ function resolvePathDuplication(filePath, resolvedPaths) {
 	};
 }
 
-function resolveAssetPaths(options, to, fileName) {
+function resolveAssetPaths(options, to, filePath) {
 
+	var fileName = path.basename(filePath);
+	var keptPath =  path.relative(process.cwd(),path.dirname(filePath));
 	var relativeAssetPath = '';
 	var absoluteAssetPath = '.';
 
@@ -191,6 +193,11 @@ function resolveAssetPaths(options, to, fileName) {
 	} else {
 		absoluteAssetPath = path.resolve(options.assetsPath);
 		relativeAssetPath = path.relative(to, absoluteAssetPath);
+	}
+	
+	if (options.keepStructure) {
+		absoluteAssetPath = path.join(absoluteAssetPath, keptPath);
+		relativeAssetPath = path.join(relativeAssetPath, keptPath);
 	}
 
 	return {
@@ -204,10 +211,9 @@ function processUrlRebase(dirname, url, to, options) {
 	var clearUrl = getClearUrl(url);
 
 	var filePath = path.resolve(dirname, clearUrl);
-	var fileName = path.basename(clearUrl);
 
 	var assetContents = getAsset(filePath);
-	var resolvedPaths = resolveAssetPaths(options, to, fileName);
+	var resolvedPaths = resolveAssetPaths(options, to, filePath);
 
 	if (!assetContents) {
 		return composeUrl(url);

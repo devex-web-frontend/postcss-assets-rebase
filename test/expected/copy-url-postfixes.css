@@ -1,5 +1,5 @@
 body {
 	background: url(imported/another-img.jpg#iefix);
 	background: url(imported/img.jpg?some);
-	background: url(imported/some.jpg?#blabla);
+	background: url(assets/img.jpg?#blabla);
 }
