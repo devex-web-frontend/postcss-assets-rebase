@@ -1,4 +1,4 @@
-var test = require('tape');
+var test = require('blue-tape');
 var path = require('path');
 var fs = require('fs');
 var rebaser = require('..');
@@ -24,15 +24,15 @@ function compareFixtures(t, testMessage, rebaserOptions, psOptions) {
 	var destPath = psOptions.to || fileName;
 	var destName = path.basename(psOptions.to);
 
-	var result = postcss()
+	return postcss()
 		.use(rebaser(rebaserOptions))
 		.process(read(filePath), psOptions)
-		.css;
+		.then(function (result) {
+			var expected = read('test/expected/' + destName);
 
-	var expected = read('test/expected/' + destName);
-
-	writefile(destPath, result);
-	t.equal(result, expected, testMessage);
+			writefile(destPath, result.css);
+			t.equal(result.css, expected, testMessage);
+		});
 }
 
 function checkAssetsCopied(folderPath, additionalPaths) {
@@ -53,9 +53,7 @@ test('no options', function(t) {
 		to: 'test/result/no-copy.css'
 	};
 	clearResults();
-	compareFixtures(t, 'should not change .css if asstesPath not specified', rebaserOptions, postcssOptions);
-	t.end();
-
+	return compareFixtures(t, 'should not change .css if asstesPath not specified', rebaserOptions, postcssOptions);
 });
 
 test('absolute', function(t) {
@@ -67,10 +65,10 @@ test('absolute', function(t) {
 		to: 'test/result/copy.css'
 	};
 	clearResults('test/result/copy.css', 'test/imported');
-	compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions);
-	t.ok(checkAssetsCopied('test/imported/'), 'should copy assets to assetsPath');
-	t.end();
-
+	return compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions)
+		.then(function () {
+			t.ok(checkAssetsCopied('test/imported/'), 'should copy assets to assetsPath');
+		});
 });
 
 test('keep structure', function(t) {
@@ -83,10 +81,11 @@ test('keep structure', function(t) {
 		to: 'test/result/copy-keep-structure.css'
 	};
 	clearResults('test/result/copy-keep-structure.css', 'test/imported');
-	compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions);
-	t.ok(checkAssetsCopied('test/imported/test/fixtures/another-assets/', ['../../../assets/img.jpg']),
-		'should copy assets to assetsPath');
-	t.end();
+	return compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions)
+		.then(function () {
+			t.ok(checkAssetsCopied('test/imported/test/fixtures/another-assets/', ['../../../assets/img.jpg']),
+				'should copy assets to assetsPath');
+		});
 
 });
 
@@ -100,9 +99,10 @@ test('relative', function(t) {
 		to: 'test/result/copy-relative.css'
 	};
 	clearResults('test/result/copy-relative.css', 'test/result/imported');
-	compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions);
-	t.ok(checkAssetsCopied('test/result/imported/'), 'should copy assets to assetsPath relative to source file');
-	t.end();
+	return compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions)
+		.then(function () {
+			t.ok(checkAssetsCopied('test/result/imported/'), 'should copy assets to assetsPath relative to source file');
+		});
 
 });
 
@@ -117,11 +117,11 @@ test('duplicated images', function(t) {
 		to: 'test/result/copy-duplicated.css'
 	};
 	clearResults('test/result/copy-duplicated.css', 'test/result/imported');
-	compareFixtures(t, 'should rename duplicated assets', rebaserOptions, postcssOptions);
-	t.ok(checkAssetsCopied('test/result/imported/', ['img_1.jpg', 'img_2.jpg']),
-		'should copy assets to assetsPath relative to source file');
-	t.end();
-
+	return compareFixtures(t, 'should rename duplicated assets', rebaserOptions, postcssOptions)
+		.then(function () {
+			t.ok(checkAssetsCopied('test/result/imported/', ['img_1.jpg', 'img_2.jpg']),
+				'should copy assets to assetsPath relative to source file');
+		});
 });
 
 test('urls with postfixes', function(t) {
@@ -135,6 +135,5 @@ test('urls with postfixes', function(t) {
 	};
 
 	clearResults('test/result/copy-copy-with-hashes.css', 'test/result/imported');
-	compareFixtures(t, 'should proper process urls with postfixes', rebaserOptions, postcssOptions);
-	t.end();
+	return compareFixtures(t, 'should proper process urls with postfixes', rebaserOptions, postcssOptions);
 });
