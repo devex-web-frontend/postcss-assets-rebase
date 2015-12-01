@@ -14,7 +14,7 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 		var to = postcssOptions.opts.to ? path.dirname(postcssOptions.opts.to) : '.';
 		postcssResult = postcssOptions;
 		if (options && options.assetsPath) {
-			css.eachDecl(function(decl) {
+			css.walkDecls(function(decl) {
 				if (decl.value && decl.value.indexOf('url(') > -1) {
 					processDecl(decl, to, options);
 				}
