@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var parseURL = require('url').parse;
-var reduceFunctionCall = require('reduce-function-call');
+var valueParser = require('postcss-value-parser');
 var mkdirp = require('mkdirp');
 var postcss = require('postcss');
 var postcssResult;
@@ -29,31 +29,26 @@ function processDecl(decl, to, options) {
 
 	var dirname = (decl.source && decl.source.input) ? path.dirname(decl.source.input.file) : process.cwd();
 
-	decl.value = reduceFunctionCall(decl.value, 'url', function(value) {
-		var url = getUrl(value),
+	decl.value = valueParser(decl.value).walk(function(node) {
+		if (node.type !== 'function' || node.value !== 'url' || !node.nodes.length) {
+			return;
+		}
+
+		var url = node.nodes[0].value,
 			processedUrl;
 
 		if (isLocalImg(url)) {
 			processedUrl = processUrlRebase(dirname, url, to, options);
 		} else {
-			processedUrl = composeUrl(url);
+			processedUrl = normalizeUrl(url);
 		}
 
-		return processedUrl;
+		node.nodes[0].value = processedUrl;
 	});
-}
-
-function getUrl(url) {
-	return url.match(/(['"]?)(.+)\1/)[2];
 }
 
 function normalizeUrl(url) {
 	return (path.sep === '\\') ? url.replace(/\\/g, '\/') : url;
-}
-
-function composeUrl(url, postfix) {
-	postfix = postfix || '';
-	return 'url(' + normalizeUrl(url) + postfix + ')';
 }
 
 // checks if file is not local
@@ -216,7 +211,7 @@ function processUrlRebase(dirname, url, to, options) {
 	var resolvedPaths = resolveAssetPaths(options, to, filePath);
 
 	if (!assetContents) {
-		return composeUrl(url);
+		return normalizeUrl(url);
 	}
 
 	if (options.renameDuplicates) {
@@ -225,5 +220,5 @@ function processUrlRebase(dirname, url, to, options) {
 
 	copyAsset(resolvedPaths.absolute, assetContents);
 
-	return composeUrl(resolvedPaths.relative, urlPostfix);
+	return normalizeUrl(resolvedPaths.relative) + urlPostfix;
 }
