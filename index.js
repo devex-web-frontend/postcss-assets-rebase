@@ -32,17 +32,12 @@ function processDecl(decl, to, options) {
 			return;
 		}
 
-		var url = node.nodes[0].value,
-			processedUrl;
+		var url = node.nodes[0].value;
 
 		if (isLocalImg(url)) {
-			processedUrl = processUrlRebase(dirname, url, to, options);
-		} else {
-			processedUrl = normalizeUrl(url);
+			node.nodes[0].value = processUrlRebase(dirname, url, to, options);
 		}
-
-		node.nodes[0].value = processedUrl;
-	});
+	}).toString();
 }
 
 function normalizeUrl(url) {
