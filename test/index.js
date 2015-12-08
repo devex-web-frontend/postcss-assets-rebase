@@ -5,7 +5,6 @@ var rebaser = require('..');
 var postcss = require('postcss');
 var rimraf = require('rimraf').sync;
 var writefile = require('writefile');
-var reporter = require('postcss-reporter');
 
 function read(name) {
 	return fs.readFileSync(name, 'utf8').trim()
