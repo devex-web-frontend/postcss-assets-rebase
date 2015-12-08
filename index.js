@@ -12,19 +12,21 @@ module.exports = postcss.plugin('postcss-assets-rebase', function (options) {
 	return function (css, postcssOptions) {
 		var to = postcssOptions.opts.to ? path.dirname(postcssOptions.opts.to) : '.';
 		postcssResult = postcssOptions;
-		if (options && options.assetsPath) {
-			css.walkDecls(function (decl) {
-				if (decl.value && decl.value.indexOf('url(') > -1) {
-					processDecl(decl, to, options);
-				}
-			});
-		} else {
-			postcssResult.warn('No assets path provided, aborting');
+		if (!options || !options.assetsPath) {
+			return postcssResult.warn('No assets path provided, aborting');
 		}
+
+		css.walkDecls(function (decl) {
+			processDecl(decl, to, options);
+		});
 	};
 });
 
 function processDecl(decl, to, options) {
+	if (!decl.value || decl.value.indexOf('url(') === -1) {
+		return;
+	}
+
 	var dirname = decl.source && decl.source.input ? path.dirname(decl.source.input.file) : process.cwd();
 
 	decl.value = valueParser(decl.value).walk(function (node) {
@@ -73,9 +75,8 @@ function composeDuplicatedPath(assetPath, index) {
 function getAsset(filePath) {
 	if (fs.existsSync(filePath)) {
 		return fs.readFileSync(filePath);
-	} else {
-		postcssResult.warn('Can\'t read file \'' + filePath + '\', ignoring');
 	}
+	postcssResult.warn('Can\'t read file \'' + filePath + '\', ignoring');
 }
 
 function getPostfix(url) {
@@ -126,16 +127,13 @@ function getAlreadyRebasedPath(filePath) {
 			};
 		}
 	}
-	return null;
 }
 
 function getDuplicationIndex(filePath) {
-	var index = 0;
-	rebasedAssets.forEach(function (rebasedAsset) {
+	return rebasedAssets.reduce(function (index, rebasedAsset) {
 		var newIndex = compareFileNames(rebasedAsset.relative, filePath);
-		index = newIndex > index ? newIndex : index;
-	});
-	return index;
+		return newIndex > index ? newIndex : index;
+	}, 0);
 }
 
 function resolvePathDuplication(filePath, resolvedPaths) {
