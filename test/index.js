@@ -7,7 +7,7 @@ var rimraf = require('rimraf').sync;
 var writefile = require('writefile');
 
 function read(name) {
-	return fs.readFileSync(name, 'utf8').trim()
+	return fs.readFileSync(name, 'utf8').trim();
 }
 function clearAssets(assetsFolder) {
 	rimraf(assetsFolder || 'test/imported');
@@ -39,13 +39,13 @@ function checkAssetsCopied(folderPath, additionalPaths) {
 	if (additionalPaths) {
 		imgPaths = imgPaths.concat(additionalPaths);
 	}
-	return imgPaths.every(function(imgPath) {
+	return imgPaths.every(function (imgPath) {
 		return fs.existsSync(folderPath + imgPath);
 	});
 
 }
 
-test('no options', function(t) {
+test('no options', function (t) {
 	var rebaserOptions = {};
 	var postcssOptions = {
 		from: 'test/fixtures/copy.css',
@@ -55,7 +55,7 @@ test('no options', function(t) {
 	return compareFixtures(t, 'should not change .css if asstesPath not specified', rebaserOptions, postcssOptions);
 });
 
-test('absolute', function(t) {
+test('absolute', function (t) {
 	var rebaserOptions = {
 		assetsPath: 'test/imported'
 	};
@@ -70,7 +70,7 @@ test('absolute', function(t) {
 		});
 });
 
-test('keep structure', function(t) {
+test('keep structure', function (t) {
 	var rebaserOptions = {
 		assetsPath: 'test/imported',
 		keepStructure: true
@@ -88,7 +88,7 @@ test('keep structure', function(t) {
 
 });
 
-test('relative', function(t) {
+test('relative', function (t) {
 	var rebaserOptions = {
 		assetsPath: 'imported',
 		relative: 'true'
@@ -105,7 +105,7 @@ test('relative', function(t) {
 
 });
 
-test('duplicated images', function(t) {
+test('duplicated images', function (t) {
 	var rebaserOptions = {
 		assetsPath: 'imported',
 		relative: 'true',
@@ -123,7 +123,7 @@ test('duplicated images', function(t) {
 		});
 });
 
-test('urls with postfixes', function(t) {
+test('urls with postfixes', function (t) {
 	var rebaserOptions = {
 		assetsPath: 'imported',
 		relative: 'true'
