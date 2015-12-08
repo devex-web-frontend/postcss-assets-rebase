@@ -42,10 +42,6 @@ function processDecl(decl, to, options) {
 	}).toString();
 }
 
-function normalizeUrl(url) {
-	return path.sep === '\\' ? url.replace(/\\/g, '\/') : url;
-}
-
 // checks if file is not local
 function isLocalImg(url) {
 	var notLocal = url.indexOf('data:') === 0 ||
@@ -55,28 +51,20 @@ function isLocalImg(url) {
 	return !notLocal;
 }
 
-// copy asset and place it to assets folder
-function copyAsset(assetPath, contents) {
-	mkdirp.sync(path.dirname(assetPath));
-	if (!fs.existsSync(assetPath)) {
-		fs.writeFileSync(assetPath, contents);
-	}
-}
-
-function composeDuplicatedPath(assetPath, index) {
-	var extname = path.extname(assetPath);
-	var fileName = path.basename(assetPath, extname);
-	var dirname = path.dirname(assetPath);
-
-	return path.join(dirname, fileName + '_' + index + extname);
-}
-
 // get asset content
 function getAsset(filePath) {
 	if (fs.existsSync(filePath)) {
 		return fs.readFileSync(filePath);
 	}
 	postcssResult.warn('Can\'t read file \'' + filePath + '\', ignoring');
+}
+
+// copy asset and place it to assets folder
+function copyAsset(assetPath, contents) {
+	mkdirp.sync(path.dirname(assetPath));
+	if (!fs.existsSync(assetPath)) {
+		fs.writeFileSync(assetPath, contents);
+	}
 }
 
 function getPostfix(url) {
@@ -96,6 +84,18 @@ function getPostfix(url) {
 
 function getClearUrl(url) {
 	return parseURL(url).pathname;
+}
+
+function normalizeUrl(url) {
+	return path.sep === '\\' ? url.replace(/\\/g, '\/') : url;
+}
+
+function composeDuplicatedPath(assetPath, index) {
+	var extname = path.extname(assetPath);
+	var fileName = path.basename(assetPath, extname);
+	var dirname = path.dirname(assetPath);
+
+	return path.join(dirname, fileName + '_' + index + extname);
 }
 
 // compare already rebased asset name with provided and get duplication index
