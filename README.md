@@ -32,7 +32,7 @@ var reporter = require('postcss-reporter');
 var css = fs.readFileSync("input.css", "utf8")
 
 // process css
-var output = postcss()
+postcss()
   .use(rebaser({
     assetsPath: "assets/imported", // new path for all assets
     relative: true // is assetsPath relative to .css position.
@@ -43,7 +43,9 @@ var output = postcss()
     from: "src/stylesheet/index.css"
     to: "dist/index.css"
   })
-  .css
+  .then(function (result) {
+    var output = result.css;
+  });
 ```
 #### Input `src/stylesheet/index.css`:
 ```css
