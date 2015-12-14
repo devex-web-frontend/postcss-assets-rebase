@@ -26,7 +26,6 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 });
 
 function processDecl(decl, to, options) {
-
 	var dirname = (decl.source && decl.source.input) ? path.dirname(decl.source.input.file) : process.cwd();
 
 	decl.value = valueParser(decl.value).walk(function(node) {
@@ -34,17 +33,11 @@ function processDecl(decl, to, options) {
 			return;
 		}
 
-		var url = node.nodes[0].value,
-			processedUrl;
-
+		var url = node.nodes[0].value;
 		if (isLocalImg(url)) {
-			processedUrl = processUrlRebase(dirname, url, to, options);
-		} else {
-			processedUrl = normalizeUrl(url);
+			node.nodes[0].value = processUrlRebase(dirname, url, to, options);
 		}
-
-		node.nodes[0].value = processedUrl;
-	});
+	}).toString();
 }
 
 function normalizeUrl(url) {
