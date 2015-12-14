@@ -5,10 +5,9 @@ var rebaser = require('..');
 var postcss = require('postcss');
 var rimraf = require('rimraf').sync;
 var writefile = require('writefile');
-var reporter = require('postcss-reporter');
 
 function read(name) {
-	return fs.readFileSync(name, 'utf8').trim()
+	return fs.readFileSync(name, 'utf8').trim();
 }
 function clearAssets(assetsFolder) {
 	rimraf(assetsFolder || 'test/imported');
@@ -32,6 +31,8 @@ function compareFixtures(t, testMessage, rebaserOptions, psOptions) {
 
 			writefile(destPath, result.css);
 			t.equal(result.css, expected, testMessage);
+
+			return result;
 		});
 }
 
@@ -40,23 +41,26 @@ function checkAssetsCopied(folderPath, additionalPaths) {
 	if (additionalPaths) {
 		imgPaths = imgPaths.concat(additionalPaths);
 	}
-	return imgPaths.every(function(imgPath) {
+	return imgPaths.every(function (imgPath) {
 		return fs.existsSync(folderPath + imgPath);
 	});
 
 }
 
-test('no options', function(t) {
+test('no options', function (t) {
 	var rebaserOptions = {};
 	var postcssOptions = {
 		from: 'test/fixtures/copy.css',
 		to: 'test/result/no-copy.css'
 	};
 	clearResults();
-	return compareFixtures(t, 'should not change .css if asstesPath not specified', rebaserOptions, postcssOptions);
+	return compareFixtures(t, 'should not change .css if asstesPath not specified', rebaserOptions, postcssOptions)
+		.then(function (result) {
+			t.equal(result.warnings()[0].toString(), 'postcss-assets-rebase: No assets path provided, aborting', 'should warn');
+		});
 });
 
-test('absolute', function(t) {
+test('absolute', function (t) {
 	var rebaserOptions = {
 		assetsPath: 'test/imported'
 	};
@@ -66,12 +70,17 @@ test('absolute', function(t) {
 	};
 	clearResults('test/result/copy.css', 'test/imported');
 	return compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions)
-		.then(function () {
+		.then(function (result) {
+			t.equal(result.warnings()[0].toString(), [
+				'postcss-assets-rebase: Can\'t read file \'',
+				path.resolve('assets/not-existing-image.jpg'),
+				'\', ignoring'
+			].join(''), 'should warn');
 			t.ok(checkAssetsCopied('test/imported/'), 'should copy assets to assetsPath');
 		});
 });
 
-test('keep structure', function(t) {
+test('keep structure', function (t) {
 	var rebaserOptions = {
 		assetsPath: 'test/imported',
 		keepStructure: true
@@ -82,14 +91,19 @@ test('keep structure', function(t) {
 	};
 	clearResults('test/result/copy-keep-structure.css', 'test/imported');
 	return compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions)
-		.then(function () {
+		.then(function (result) {
+			t.equal(result.warnings()[0].toString(), [
+				'postcss-assets-rebase: Can\'t read file \'',
+				path.resolve('assets/not-existing-image.jpg'),
+				'\', ignoring'
+			].join(''), 'should warn');
 			t.ok(checkAssetsCopied('test/imported/test/fixtures/another-assets/', ['../../../assets/img.jpg']),
 				'should copy assets to assetsPath');
 		});
 
 });
 
-test('relative', function(t) {
+test('relative', function (t) {
 	var rebaserOptions = {
 		assetsPath: 'imported',
 		relative: 'true'
@@ -100,13 +114,18 @@ test('relative', function(t) {
 	};
 	clearResults('test/result/copy-relative.css', 'test/result/imported');
 	return compareFixtures(t, 'should change existing assets path', rebaserOptions, postcssOptions)
-		.then(function () {
+		.then(function (result) {
+			t.equal(result.warnings()[0].toString(), [
+				'postcss-assets-rebase: Can\'t read file \'',
+				path.resolve('assets/not-existing-image.jpg'),
+				'\', ignoring'
+			].join(''), 'should warn');
 			t.ok(checkAssetsCopied('test/result/imported/'), 'should copy assets to assetsPath relative to source file');
 		});
 
 });
 
-test('duplicated images', function(t) {
+test('duplicated images', function (t) {
 	var rebaserOptions = {
 		assetsPath: 'imported',
 		relative: 'true',
@@ -118,13 +137,19 @@ test('duplicated images', function(t) {
 	};
 	clearResults('test/result/copy-duplicated.css', 'test/result/imported');
 	return compareFixtures(t, 'should rename duplicated assets', rebaserOptions, postcssOptions)
-		.then(function () {
+		.then(function (result) {
+			t.equal(result.warnings()[0].toString(), [
+				'postcss-assets-rebase: duplicated path \'',
+				path.resolve('test/fixtures/another-assets/img.jpg'),
+				'\' renamed to: ',
+				path.normalize('imported/img_1.jpg')
+			].join(''), 'should warn');
 			t.ok(checkAssetsCopied('test/result/imported/', ['img_1.jpg', 'img_2.jpg']),
 				'should copy assets to assetsPath relative to source file');
 		});
 });
 
-test('urls with postfixes', function(t) {
+test('urls with postfixes', function (t) {
 	var rebaserOptions = {
 		assetsPath: 'imported',
 		relative: 'true'
@@ -135,5 +160,12 @@ test('urls with postfixes', function(t) {
 	};
 
 	clearResults('test/result/copy-copy-with-hashes.css', 'test/result/imported');
-	return compareFixtures(t, 'should proper process urls with postfixes', rebaserOptions, postcssOptions);
+	return compareFixtures(t, 'should proper process urls with postfixes', rebaserOptions, postcssOptions)
+		.then(function (result) {
+			t.equal(result.warnings()[0].toString(), [
+				'postcss-assets-rebase: Can\'t read file \'',
+				path.resolve('test/fixtures/assets/img.jpg'),
+				'\', ignoring'
+			].join(''), 'should warn');
+		});
 });

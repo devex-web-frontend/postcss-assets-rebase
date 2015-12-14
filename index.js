@@ -8,47 +8,38 @@ var postcssResult;
 
 var rebasedAssets = [];
 
-module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
-
-	return function(css, postcssOptions) {
+module.exports = postcss.plugin('postcss-assets-rebase', function (options) {
+	return function (css, postcssOptions) {
 		var to = postcssOptions.opts.to ? path.dirname(postcssOptions.opts.to) : '.';
 		postcssResult = postcssOptions;
-		if (options && options.assetsPath) {
-			css.walkDecls(function(decl) {
-				if (decl.value && decl.value.indexOf('url(') > -1) {
-					processDecl(decl, to, options);
-				}
-			})
-		} else {
-			postcssResult.warn('postcss-assets-rebase: No assets path provided, aborting');
+		if (!options || !options.assetsPath) {
+			return postcssResult.warn('No assets path provided, aborting');
 		}
-	}
+
+		css.walkDecls(function (decl) {
+			processDecl(decl, to, options);
+		});
+	};
 });
 
 function processDecl(decl, to, options) {
+	if (!decl.value || decl.value.indexOf('url(') === -1) {
+		return;
+	}
 
-	var dirname = (decl.source && decl.source.input) ? path.dirname(decl.source.input.file) : process.cwd();
+	var dirname = decl.source && decl.source.input ? path.dirname(decl.source.input.file) : process.cwd();
 
-	decl.value = valueParser(decl.value).walk(function(node) {
+	decl.value = valueParser(decl.value).walk(function (node) {
 		if (node.type !== 'function' || node.value !== 'url' || !node.nodes.length) {
 			return;
 		}
 
-		var url = node.nodes[0].value,
-			processedUrl;
+		var url = node.nodes[0].value;
 
 		if (isLocalImg(url)) {
-			processedUrl = processUrlRebase(dirname, url, to, options);
-		} else {
-			processedUrl = normalizeUrl(url);
+			node.nodes[0].value = processUrlRebase(dirname, url, to, options);
 		}
-
-		node.nodes[0].value = processedUrl;
-	});
-}
-
-function normalizeUrl(url) {
-	return (path.sep === '\\') ? url.replace(/\\/g, '\/') : url;
+	}).toString();
 }
 
 // checks if file is not local
@@ -60,28 +51,19 @@ function isLocalImg(url) {
 	return !notLocal;
 }
 
-//copy asset and place it to assets folder
+// get asset content
+function getAsset(filePath) {
+	if (fs.existsSync(filePath)) {
+		return fs.readFileSync(filePath);
+	}
+	postcssResult.warn('Can\'t read file \'' + filePath + '\', ignoring');
+}
+
+// copy asset and place it to assets folder
 function copyAsset(assetPath, contents) {
 	mkdirp.sync(path.dirname(assetPath));
 	if (!fs.existsSync(assetPath)) {
 		fs.writeFileSync(assetPath, contents);
-	}
-}
-
-function composeDuplicatedPath(assetPath, index) {
-	var extname = path.extname(assetPath);
-	var fileName = path.basename(assetPath, extname);
-	var dirname = path.dirname(assetPath);
-
-	return path.join(dirname, fileName + '_' + index + extname);
-}
-
-//get asset content
-function getAsset(filePath) {
-	if (fs.existsSync(filePath)) {
-		return fs.readFileSync(filePath);
-	} else {
-		postcssResult.warn('postcss-assets-rebase: Can\'t read file \'' + filePath + '\', ignoring');
 	}
 }
 
@@ -103,7 +85,20 @@ function getPostfix(url) {
 function getClearUrl(url) {
 	return parseURL(url).pathname;
 }
-//compare already rebased asset name with provided and get duplication index
+
+function normalizeUrl(url) {
+	return path.sep === '\\' ? url.replace(/\\/g, '\/') : url;
+}
+
+function composeDuplicatedPath(assetPath, index) {
+	var extname = path.extname(assetPath);
+	var fileName = path.basename(assetPath, extname);
+	var dirname = path.dirname(assetPath);
+
+	return path.join(dirname, fileName + '_' + index + extname);
+}
+
+// compare already rebased asset name with provided and get duplication index
 function compareFileNames(rebasedPath, filePath) {
 	var rebasedExtName = path.extname(rebasedPath);
 	var fileExtName = path.extname(filePath);
@@ -117,7 +112,7 @@ function compareFileNames(rebasedPath, filePath) {
 	if (rebasedBaseName === fileBaseName && rebasedExtName === fileExtName) {
 		index = 1;
 	} else {
-		index = executed ? (parseFloat(executed[1]) + 1) : 0;
+		index = executed ? parseFloat(executed[1]) + 1 : 0;
 	}
 
 	return index;
@@ -132,16 +127,13 @@ function getAlreadyRebasedPath(filePath) {
 			};
 		}
 	}
-	return null;
 }
 
 function getDuplicationIndex(filePath) {
-	var index = 0;
-	rebasedAssets.forEach(function(rebasedAsset) {
+	return rebasedAssets.reduce(function (index, rebasedAsset) {
 		var newIndex = compareFileNames(rebasedAsset.relative, filePath);
-		index = (newIndex > index) ? newIndex : index;
-	});
-	return index;
+		return newIndex > index ? newIndex : index;
+	}, 0);
 }
 
 function resolvePathDuplication(filePath, resolvedPaths) {
@@ -150,7 +142,7 @@ function resolvePathDuplication(filePath, resolvedPaths) {
 
 	var alreadyRebasedPath = getAlreadyRebasedPath(filePath);
 
-	if (!!alreadyRebasedPath) {
+	if (alreadyRebasedPath) {
 		absoluteAssetPath = alreadyRebasedPath.absolute;
 		relativeAssetPath = alreadyRebasedPath.relative;
 	} else {
@@ -158,8 +150,7 @@ function resolvePathDuplication(filePath, resolvedPaths) {
 		if (duplicationIndex) {
 			relativeAssetPath = composeDuplicatedPath(relativeAssetPath, duplicationIndex);
 			absoluteAssetPath = composeDuplicatedPath(absoluteAssetPath, duplicationIndex);
-			postcssResult.warn('postcss-assets-rebase: duplicated path \'' + filePath + '\' renamed to: ' +
-				relativeAssetPath);
+			postcssResult.warn('duplicated path \'' + filePath + '\' renamed to: ' + relativeAssetPath);
 		}
 	}
 
@@ -176,9 +167,8 @@ function resolvePathDuplication(filePath, resolvedPaths) {
 }
 
 function resolveAssetPaths(options, to, filePath) {
-
 	var fileName = path.basename(filePath);
-	var keptPath =  path.relative(process.cwd(),path.dirname(filePath));
+	var keptPath =  path.relative(process.cwd(), path.dirname(filePath));
 	var relativeAssetPath = '';
 	var absoluteAssetPath = '.';
 
@@ -189,7 +179,7 @@ function resolveAssetPaths(options, to, filePath) {
 		absoluteAssetPath = path.resolve(options.assetsPath);
 		relativeAssetPath = path.relative(to, absoluteAssetPath);
 	}
-	
+
 	if (options.keepStructure) {
 		absoluteAssetPath = path.join(absoluteAssetPath, keptPath);
 		relativeAssetPath = path.join(relativeAssetPath, keptPath);
@@ -198,10 +188,10 @@ function resolveAssetPaths(options, to, filePath) {
 	return {
 		absolute: path.join(absoluteAssetPath, fileName),
 		relative: path.join(relativeAssetPath, fileName)
-	}
+	};
 }
-function processUrlRebase(dirname, url, to, options) {
 
+function processUrlRebase(dirname, url, to, options) {
 	var urlPostfix = getPostfix(url);
 	var clearUrl = getClearUrl(url);
 
