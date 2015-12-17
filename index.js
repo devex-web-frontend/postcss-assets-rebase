@@ -136,12 +136,10 @@ function getAlreadyRebasedPath(filePath) {
 }
 
 function getDuplicationIndex(filePath) {
-	var index = 0;
-	rebasedAssets.forEach(function(rebasedAsset) {
+	return rebasedAssets.reduce(function(index, rebasedAsset) {
 		var newIndex = compareFileNames(rebasedAsset.relative, filePath);
-		index = (newIndex > index) ? newIndex : index;
-	});
-	return index;
+		return (newIndex > index) ? newIndex : index;
+	}, 0);
 }
 
 function resolvePathDuplication(filePath, resolvedPaths) {
