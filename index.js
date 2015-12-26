@@ -9,24 +9,33 @@ var postcssResult;
 var rebasedAssets = [];
 
 module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
-
 	return function(css, postcssOptions) {
+		var promises = [];
 		var to = postcssOptions.opts.to ? path.dirname(postcssOptions.opts.to) : '.';
 		postcssResult = postcssOptions;
-		if (options && options.assetsPath) {
-			css.walkDecls(function(decl) {
-				if (decl.value && decl.value.indexOf('url(') > -1) {
-					processDecl(decl, to, options);
-				}
-			})
-		} else {
-			postcssResult.warn('No assets path provided, aborting');
+		if (!options || !options.assetsPath) {
+			return postcssResult.warn('No assets path provided, aborting');
 		}
+
+		css.walkDecls(function(decl) {
+			if (!decl.value || decl.value.indexOf('url(') === -1) {
+				return;
+			}
+			promises.push(processDecl(decl, to, options));
+		})
+
+		return Promise.all(promises)
+		.then(function (decls) {
+			decls.forEach(function (decl) {
+				decl.value = decl.value.toString();
+			})
+		});
 	}
 });
 
 function processDecl(decl, to, options) {
 	var dirname = (decl.source && decl.source.input) ? path.dirname(decl.source.input.file) : process.cwd();
+	var promises = [];
 
 	decl.value = valueParser(decl.value).walk(function(node) {
 		if (node.type !== 'function' || node.value !== 'url' || !node.nodes.length) {
@@ -34,10 +43,20 @@ function processDecl(decl, to, options) {
 		}
 
 		var url = node.nodes[0].value;
-		if (isLocalImg(url)) {
-			node.nodes[0].value = processUrlRebase(dirname, url, to, options);
+		if (!isLocalImg(url)) {
+			return;
 		}
-	}).toString();
+		var promise = Promise.resolve(processUrlRebase(dirname, url, to, options))
+		.then(function (url) {
+			node.nodes[0].value = url;
+		});
+		promises.push(promise);
+	});
+
+	return Promise.all(promises)
+	.then(function () {
+		return decl;
+	});
 }
 
 function normalizeUrl(url) {
