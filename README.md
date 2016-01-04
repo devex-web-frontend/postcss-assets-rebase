@@ -40,7 +40,7 @@ postcss()
   }))
   .use(reporter)
   .process(css, {
-    from: "src/stylesheet/index.css"
+    from: "src/stylesheet/index.css",
     to: "dist/index.css"
   })
   .then(function (result) {
