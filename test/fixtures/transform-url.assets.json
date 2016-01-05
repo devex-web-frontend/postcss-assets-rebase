@@ -1,0 +1,5 @@
+{
+	"fixtures/assets/kitty.jpg": "result/transform-url/kitty.jpg",
+	"fixtures/assets/just-kitty.jpg": "result/transform-url/just-kitty.jpg",
+	"fixtures/assets/structure/nested-kitty.jpg": "result/transform-url/nested-kitty.jpg"
+}

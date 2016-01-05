@@ -1,0 +1,5 @@
+body {
+	background: url(fixtures/assets/kitty.jpg#iefix);
+	background: url(fixtures/assets/just-kitty.jpg?some);
+	background: url(fixtures/assets/structure/nested-kitty.jpg?#blabla);
+}

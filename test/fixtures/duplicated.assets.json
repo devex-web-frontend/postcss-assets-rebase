@@ -1,0 +1,4 @@
+{
+	"fixtures/assets/kitty.jpg": "result/duplicated/kitty.jpg",
+	"fixtures/assets/structure/kitty.jpg": "result/duplicated/kitty_1.jpg"
+}

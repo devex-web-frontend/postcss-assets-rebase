@@ -1,0 +1,5 @@
+body {
+	background: url(result/postfix/kitty.jpg#iefix);
+	background: url(result/postfix/just-kitty.jpg?some);
+	background: url(result/postfix/nested-kitty.jpg?#blabla);
+}

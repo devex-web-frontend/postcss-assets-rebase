@@ -1,5 +1,4 @@
 node_modules
-test/*/imported/**
+test/fixtures/*.actual.css
 test/result
-test/imported
 .idea
