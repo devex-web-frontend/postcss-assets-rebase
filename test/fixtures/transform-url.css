@@ -1,0 +1,5 @@
+a {
+	background: url(fixtures/assets/kitty.jpg);
+	background: url('fixtures/assets/just-kitty.jpg');
+	background: url("fixtures/assets/structure/nested-kitty.jpg");
+}

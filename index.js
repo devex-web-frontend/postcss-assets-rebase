@@ -34,8 +34,16 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 });
 
 function processDecl(decl, to, options) {
-	var dirname = (decl.source && decl.source.input) ? path.dirname(decl.source.input.file) : process.cwd();
 	var promises = [];
+	var dirname = process.cwd();
+	if (
+		options.relative &&
+		decl.source &&
+		decl.source.input &&
+		decl.source.input.file
+	) {
+		dirname = path.dirname(decl.source.input.file);
+	}
 
 	decl.value = valueParser(decl.value).walk(function(node) {
 		if (node.type !== 'function' || node.value !== 'url' || !node.nodes.length) {
