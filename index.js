@@ -17,54 +17,66 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 			return postcssResult.warn('No assets path provided, aborting');
 		}
 
-		css.walkDecls(function(decl) {
-			if (!decl.value || decl.value.indexOf('url(') === -1) {
-				return;
-			}
-			promises.push(processDecl(decl, to, options));
-		})
+		var instances = getInstances(css, options);
+
+		var promises = instances.map(function(instance) {
+			return Promise.resolve(
+				processUrlRebase(instance.base, instance.url, to, options)
+			)
+			.then(function(url) {
+				instance.node.value = url;
+			});
+		});
 
 		return Promise.all(promises)
-		.then(function (decls) {
-			decls.forEach(function (decl) {
-				decl.value = decl.value.toString();
-			})
+		.then(function() {
+			instances.forEach(function(instance) {
+				instance.decl.value = String(instance.decl.value);
+			});
 		});
 	}
 });
 
-function processDecl(decl, to, options) {
-	var promises = [];
-	var dirname = process.cwd();
-	if (
-		options.relative &&
-		decl.source &&
-		decl.source.input &&
-		decl.source.input.file
-	) {
-		dirname = path.dirname(decl.source.input.file);
-	}
+function getInstances(css, options) {
+	var instances = [];
 
-	decl.value = valueParser(decl.value).walk(function(node) {
-		if (node.type !== 'function' || node.value !== 'url' || !node.nodes.length) {
+	css.walkDecls(function(decl) {
+		if (!decl.value || decl.value.indexOf('url(') === -1) {
 			return;
 		}
 
-		var url = node.nodes[0].value;
-		if (!isLocalImg(url)) {
-			return;
+		var dirname = process.cwd();
+		if (
+			options.relative &&
+			decl.source &&
+			decl.source.input &&
+			decl.source.input.file
+		) {
+			dirname = path.dirname(decl.source.input.file);
 		}
-		var promise = Promise.resolve(processUrlRebase(dirname, url, to, options))
-		.then(function (url) {
-			node.nodes[0].value = url;
+
+		decl.value = valueParser(decl.value).walk(function(node) {
+			if (
+				node.type !== 'function' ||
+				node.value !== 'url' ||
+				!node.nodes.length
+			) {
+				return;
+			}
+
+			var url = node.nodes[0].value;
+			if (isLocalImg(url)) {
+				instances.push({
+					decl: decl,
+					node: node.nodes[0],
+					url: url,
+					base: dirname
+				});
+			}
 		});
-		promises.push(promise);
 	});
 
-	return Promise.all(promises)
-	.then(function () {
-		return decl;
-	});
+	return instances;
 }
 
 function normalizeUrl(url) {
