@@ -21,10 +21,10 @@ module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 
 		var promises = instances.map(function(instance) {
 			return Promise.resolve(
-				processUrlRebase(instance.base, instance.url, to, options)
+				processUrlRebase(instance, to, options)
 			)
-			.then(function(url) {
-				instance.node.value = url;
+			.then(function() {
+				instance.node.value = instance.url;
 			});
 		});
 
@@ -229,18 +229,20 @@ function resolveAssetPaths(options, to, filePath) {
 		relative: path.join(relativeAssetPath, fileName)
 	}
 }
-function processUrlRebase(dirname, url, to, options) {
+
+function processUrlRebase(instance, to, options) {
+	var url = instance.url;
 
 	var urlPostfix = getPostfix(url);
 	var clearUrl = getClearUrl(url);
 
-	var filePath = path.resolve(dirname, clearUrl);
+	var filePath = path.resolve(instance.base, clearUrl);
 
 	var assetContents = getAsset(filePath);
 	var resolvedPaths = resolveAssetPaths(options, to, filePath);
 
 	if (!assetContents) {
-		return normalizeUrl(url);
+		return;
 	}
 
 	if (options.renameDuplicates) {
@@ -249,5 +251,5 @@ function processUrlRebase(dirname, url, to, options) {
 
 	copyAsset(resolvedPaths.absolute, assetContents);
 
-	return normalizeUrl(resolvedPaths.relative) + urlPostfix;
+	instance.url = normalizeUrl(resolvedPaths.relative) + urlPostfix;
 }
