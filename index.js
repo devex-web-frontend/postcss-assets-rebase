@@ -79,10 +79,6 @@ function getInstances(css, options) {
 	return instances;
 }
 
-function normalizeUrl(url) {
-	return (path.sep === '\\') ? url.replace(/\\/g, '\/') : url;
-}
-
 // checks if file is not local
 function isLocalImg(url) {
 	var notLocal = url.indexOf('data:') === 0 ||
@@ -117,24 +113,6 @@ function getAsset(filePath) {
 	}
 }
 
-function getPostfix(url) {
-	var parsedURL = parseURL(url);
-	var postfix = '';
-
-	if (parsedURL.search) {
-		postfix += parsedURL.search;
-	}
-
-	if (parsedURL.hash) {
-		postfix += parsedURL.hash;
-	}
-
-	return postfix;
-}
-
-function getClearUrl(url) {
-	return parseURL(url).pathname;
-}
 //compare already rebased asset name with provided and get duplication index
 function compareFileNames(rebasedPath, filePath) {
 	var rebasedExtName = path.extname(rebasedPath);
@@ -230,13 +208,22 @@ function resolveAssetPaths(options, to, filePath) {
 	}
 }
 
+function splitUrl(url) {
+	var parsed = parseURL(url);
+
+	return {
+		url: parsed.pathname,
+		postfix: (parsed.search || '') + (parsed.hash || '')
+	};
+}
+
+function normalizeUrl(url) {
+	return path.sep !== '/' ? url.split(path.sep).join('/') : url;
+}
+
 function processUrlRebase(instance, to, options) {
-	var url = instance.url;
-
-	var urlPostfix = getPostfix(url);
-	var clearUrl = getClearUrl(url);
-
-	var filePath = path.resolve(instance.base, clearUrl);
+	var splittedUrl = splitUrl(instance.url);
+	var filePath = path.resolve(instance.base, splittedUrl.url);
 
 	var assetContents = getAsset(filePath);
 	var resolvedPaths = resolveAssetPaths(options, to, filePath);
@@ -251,5 +238,5 @@ function processUrlRebase(instance, to, options) {
 
 	copyAsset(resolvedPaths.absolute, assetContents);
 
-	instance.url = normalizeUrl(resolvedPaths.relative) + urlPostfix;
+	instance.url = normalizeUrl(resolvedPaths.relative) + splittedUrl.postfix;
 }
