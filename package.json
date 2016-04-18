@@ -1,6 +1,6 @@
 {
   "name": "postcss-assets-rebase",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "PostCSS plugin to rebase assets to specified folder.",
   "keywords": [
     "css",
