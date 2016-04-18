@@ -10,7 +10,6 @@ var rebasedAssets = [];
 
 module.exports = postcss.plugin('postcss-assets-rebase', function(options) {
 	return function(css, postcssOptions) {
-		var promises = [];
 		var to = postcssOptions.opts.to ? path.dirname(postcssOptions.opts.to) : '.';
 		postcssResult = postcssOptions;
 		if (!options || !options.assetsPath) {
@@ -144,11 +143,12 @@ function compareFileNames(rebasedPath, filePath) {
 
 	var reg = new RegExp('^' + fileBaseName + '_(\\d+)$');
 	var executed = reg.exec(rebasedBaseName);
-	var index;
+	var index = 1;
 
-	if (rebasedBaseName === fileBaseName && rebasedExtName === fileExtName) {
-		index = 1;
-	} else {
+	if (
+		rebasedBaseName !== fileBaseName ||
+		rebasedExtName !== fileExtName
+	) {
 		index = executed ? (parseFloat(executed[1]) + 1) : 0;
 	}
 

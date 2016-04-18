@@ -31,11 +31,12 @@
   },
   "devDependencies": {
     "blue-tape": "^0.1.11",
+    "colortape": "^0.1.1",
     "del": "^2.2.0",
     "object-assign": "^4.0.1",
     "path-exists": "^2.1.0"
   },
   "scripts": {
-    "test": "blue-tape test"
+    "test": "colortape test"
   }
 }
