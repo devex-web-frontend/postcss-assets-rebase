@@ -1,3 +1,6 @@
+if (global.Promise === undefined) {
+	require('es6-promise').polyfill()
+}
 var fs = require('fs');
 var path = require('path');
 var parseURL = require('url').parse;
